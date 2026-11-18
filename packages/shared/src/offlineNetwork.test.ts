@@ -42,6 +42,7 @@ describe("blockedConnectTarget", () => {
     ["*.localhost", [{ host: "app.localhost", port: 80 }], null],
     ["default host", [{ port: 80 }], null],
     ["IPC path option", [{ path: "/tmp/t3.sock" }], null],
+    ["empty path with a remote host", [{ path: "", host: "10.0.0.2", port: 443 }], "10.0.0.2:443"],
     ["IPC path string", ["\\\\.\\pipe\\t3"], null],
   ])("%s", (_name, args, expected) => {
     expect(blockedConnectTarget(args)).toBe(expected);

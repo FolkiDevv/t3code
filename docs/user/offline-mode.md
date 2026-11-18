@@ -7,8 +7,10 @@ links to other environments and no images from the internet. Connections to this
 working, and other devices can still open this server.
 
 Git and the source control CLIs (`gh`, `glab` and similar) that T3 Code runs itself are offline
-too, so fetching, pushing and pull request actions from the app fail. Providers you run are not
-restricted: a provider CLI such as Claude Code or Codex still reaches its own service.
+too, so fetching, pushing and pull request actions from the app fail. Git only uses local file
+remotes, so a remote served over http or ssh fails even when it is on this machine. Providers you
+run are not restricted: a provider CLI such as Claude Code or Codex still reaches its own service.
+SSH environments you add in the desktop app also still connect, through your own `ssh`.
 
 To allow network access, set `T3CODE_OFFLINE=0` in the environment that starts T3 Code and restart
 it. For the desktop app, the variable must be in the app's launch environment: start it from a

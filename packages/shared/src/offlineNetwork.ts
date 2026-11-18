@@ -110,7 +110,8 @@ export const blockedConnectTarget = (args: ConnectArgs): string | null => {
   let port: unknown;
   if (first !== null && typeof first === "object") {
     const options = first as { path?: unknown; host?: unknown; port?: unknown };
-    if (options.path !== undefined && options.path !== null) return null;
+    // net picks IPC only for a truthy path; an empty one still connects over TCP.
+    if (options.path) return null;
     host = options.host;
     port = options.port;
   } else if (typeof first === "string" && Number.isNaN(Number(first))) {
@@ -166,10 +167,11 @@ export const installOfflineNetworkGuard = (): void => {
       ? Reflect.apply(originalPromiseLookup, dns.promises, [hostname, ...rest])
       : Promise.reject(dnsError(hostname, "getaddrinfo"))) as typeof dns.promises.lookup;
 
-  // resolve* and reverse always query a DNS server, even for loopback names.
+  // resolve*, reverse and lookupService always query a DNS server, even for loopback names.
   const blockQueries = (target: Record<string, unknown>, async: boolean) => {
     for (const key of Object.getOwnPropertyNames(target)) {
-      if (!/^(resolve|reverse)/.test(key) || typeof target[key] !== "function") continue;
+      if (!/^(resolve|reverse|lookupService)/.test(key) || typeof target[key] !== "function")
+        continue;
       target[key] = (...args: Array<unknown>) => {
         const error = dnsError(args[0], key);
         if (async) return Promise.reject(error);
