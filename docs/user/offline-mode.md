@@ -13,4 +13,6 @@ restricted: a provider CLI such as Claude Code or Codex still reaches its own se
 To allow network access, set `T3CODE_OFFLINE=0` in the environment that starts T3 Code and restart
 it. For the desktop app, the variable must be in the app's launch environment: start it from a
 terminal, use `launchctl setenv T3CODE_OFFLINE 0` on macOS, or set a user environment variable on
-Windows. The desktop app does not read it from your shell profile.
+Windows. The desktop app does not read it from your shell profile. The [background
+service](./background-service.md) does not inherit your shell either, so set the variable in the
+service's environment.

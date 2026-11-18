@@ -20,13 +20,23 @@ loopback.addAddress("::1", "ipv6");
 loopback.addAddress("::", "ipv6");
 loopback.addSubnet("::ffff:127.0.0.0", 104, "ipv6");
 
-const isLoopbackHost = (rawHost: string): boolean => {
-  const host = rawHost
+const normalizeHost = (rawHost: string) =>
+  rawHost
     .trim()
     .toLowerCase()
     .replace(/^\[|\]$/g, "")
     .replace(/\.$/, "");
-  if (host === "localhost" || host.endsWith(".localhost")) return true;
+
+const allowedHosts = new Set<string>();
+
+/** Lets this process reach a host on this machine that is not loopback, such as a WSL distro. */
+export const allowOfflineHost = (host: string): void => {
+  allowedHosts.add(normalizeHost(host));
+};
+
+const isLoopbackHost = (rawHost: string): boolean => {
+  const host = normalizeHost(rawHost);
+  if (host === "localhost" || host.endsWith(".localhost") || allowedHosts.has(host)) return true;
   const family = NodeNet.isIP(host);
   if (family === 0) return false;
   return loopback.check(host, family === 4 ? "ipv4" : "ipv6");
@@ -49,9 +59,13 @@ const LOOPBACK_SOURCES = ["localhost", "127.0.0.1", "[::1]"]
   .flatMap((host) => ["http", "https", "ws", "wss"].map((scheme) => `${scheme}://${host}:*`))
   .join(" ");
 
-/** Keeps a browser client on its own origin and loopback; scripts and styles are bundled. */
+/** Keeps a browser client on its own origin and loopback. Sources follow the desktop policy. */
 export const OFFLINE_CONTENT_SECURITY_POLICY = [
-  `connect-src 'self' ${LOOPBACK_SOURCES}`,
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+  "worker-src 'self' blob:",
+  "style-src 'self' 'unsafe-inline'",
+  "object-src 'self' blob:",
+  `connect-src 'self' blob: ${LOOPBACK_SOURCES}`,
   `img-src 'self' data: blob: ${LOOPBACK_SOURCES}`,
   `media-src 'self' data: blob: ${LOOPBACK_SOURCES}`,
   `font-src 'self' data: ${LOOPBACK_SOURCES}`,
@@ -132,8 +146,9 @@ export const installOfflineNetworkGuard = (): void => {
 
   // The CommonJS exports object is writable; syncBuiltinESMExports republishes it to ESM imports.
   const dns = process.getBuiltinModule("node:dns");
+  // An IP literal resolves locally, without a query.
   const isAllowedName = (hostname: unknown) =>
-    typeof hostname === "string" && isLoopbackHost(hostname);
+    typeof hostname === "string" && (isLoopbackHost(hostname) || NodeNet.isIP(hostname) !== 0);
   const dnsError = (hostname: unknown, syscall: string) =>
     Object.assign(offlineNetworkError(String(hostname)), { syscall, hostname });
 

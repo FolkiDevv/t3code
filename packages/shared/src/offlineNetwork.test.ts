@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 
 import {
+  allowOfflineHost,
   blockedConnectTarget,
   isOfflineMode,
   isRemoteNetworkUrl,
@@ -62,4 +63,11 @@ describe("isRemoteNetworkUrl", () => {
   ])("%s → %s", (url, remote) => {
     expect(isRemoteNetworkUrl(url)).toBe(remote);
   });
+});
+
+it("lets a process reach a local host it registered", () => {
+  expect(isRemoteNetworkUrl("http://172.20.1.5:3773/")).toBe(true);
+  allowOfflineHost("172.20.1.5");
+  expect(isRemoteNetworkUrl("http://172.20.1.5:3773/")).toBe(false);
+  expect(blockedConnectTarget([{ host: "172.20.1.5", port: 3773 }])).toBeNull();
 });

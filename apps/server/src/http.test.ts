@@ -15,6 +15,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as Queue from "effect/Queue";
 import * as Tracer from "effect/Tracer";
 import { HttpClient, HttpClientRequest, HttpRouter, HttpServerResponse } from "effect/http";
+import { OFFLINE_CONTENT_SECURITY_POLICY, isOfflineMode } from "@t3tools/shared/offlineNetwork";
 import { ASSET_ROUTE_PREFIX } from "./assets/AssetAccess.ts";
 import { ATTACHMENT_UPLOAD_ROUTE_PREFIX } from "./assets/AttachmentUpload.ts";
 import { openMediaFile } from "./assets/MediaFile.ts";
@@ -471,9 +472,10 @@ it.layer(
         expect(response.status).toBe(200);
         expect(yield* response.text).toBe(nextHtml);
         expect(response.headers["cache-control"]).toBe("no-cache");
-        // Tests run with T3CODE_OFFLINE unset, so the browser is held to its origin and loopback.
-        expect(response.headers["content-security-policy"]).toMatch(
-          /^frame-ancestors 'none'; connect-src 'self' http:\/\/localhost:\* /,
+        expect(response.headers["content-security-policy"]).toBe(
+          isOfflineMode()
+            ? `frame-ancestors 'none'; ${OFFLINE_CONTENT_SECURITY_POLICY}`
+            : "frame-ancestors 'none'",
         );
         expect(response.headers["x-frame-options"]).toBe("DENY");
         expect(response.headers["etag"]).toBeUndefined();
