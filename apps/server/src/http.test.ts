@@ -471,7 +471,10 @@ it.layer(
         expect(response.status).toBe(200);
         expect(yield* response.text).toBe(nextHtml);
         expect(response.headers["cache-control"]).toBe("no-cache");
-        expect(response.headers["content-security-policy"]).toBe("frame-ancestors 'none'");
+        // Tests run with T3CODE_OFFLINE unset, so the browser is held to its origin and loopback.
+        expect(response.headers["content-security-policy"]).toMatch(
+          /^frame-ancestors 'none'; connect-src 'self' http:\/\/localhost:\* /,
+        );
         expect(response.headers["x-frame-options"]).toBe("DENY");
         expect(response.headers["etag"]).toBeUndefined();
         expect(response.headers["last-modified"]).toBeUndefined();

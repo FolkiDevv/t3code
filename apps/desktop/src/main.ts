@@ -1,9 +1,11 @@
 import * as MacPermissions from "./permissions/MacPermissions.ts";
 import { handleStdioError } from "./app/stdioErrors.ts";
+import { installDesktopOfflineGuard } from "./electron/offlineGuard.ts";
 
 for (const stream of [process.stdout, process.stderr]) {
   stream.on("error", handleStdioError);
 }
+installDesktopOfflineGuard();
 
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
