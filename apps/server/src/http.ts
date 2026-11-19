@@ -8,6 +8,7 @@ import { isDevProxiedPath } from "@t3tools/shared/devProxy";
 import { injectMcpAppCookieBootstrap, injectMcpAppThemeBootstrap } from "@t3tools/shared/mcpApp";
 import { FILE_PREVIEW_SCROLL_SCRIPT } from "@t3tools/shared/htmlRender";
 import { decodeOtlpTraceRecords } from "@t3tools/shared/observability";
+import { OFFLINE_CONTENT_SECURITY_POLICY, isOfflineMode } from "@t3tools/shared/offlineNetwork";
 import * as ByteSize from "effect/ByteSize";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -609,7 +610,9 @@ const streamStaticFile = (file: FileSystem.File, size: bigint) =>
 
 // The app can approve agents and start threads in one click, so no other site may frame it.
 const SPA_FRAME_HEADERS = {
-  "Content-Security-Policy": "frame-ancestors 'none'",
+  "Content-Security-Policy": isOfflineMode()
+    ? `frame-ancestors 'none'; ${OFFLINE_CONTENT_SECURITY_POLICY}`
+    : "frame-ancestors 'none'",
   "X-Frame-Options": "DENY",
 };
 

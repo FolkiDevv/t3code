@@ -20,6 +20,7 @@ import {
   VcsProcessTimeoutError,
 } from "@t3tools/contracts";
 import * as HostProcess from "@t3tools/shared/HostProcess";
+import { offlineChildProcessEnv } from "@t3tools/shared/offlineNetwork";
 import type { SourceControlProcessInput } from "@t3tools/source-control-core/server/SourceControlHost";
 
 import { gitCommandDuration, gitCommandsTotal, withMetrics } from "../observability/Metrics.ts";
@@ -242,6 +243,7 @@ export const make = Effect.gen(function* () {
           // LANGUAGE leaves LC_CTYPE, which hooks inherit, alone.
           ...(input.command === "git" ? { LANGUAGE: "C" } : {}),
           ...input.env,
+          ...offlineChildProcessEnv(),
           ...explicitBareRepositoryEnv({ ...process.env, ...input.env }, hostPlatform),
         },
         timeout: input.timeoutMs ?? DEFAULT_TIMEOUT_MS,
